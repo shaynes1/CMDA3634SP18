@@ -1,0 +1,25 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+
+
+
+void main() {
+
+	int one;
+
+	printf("Enter a prime number:");
+	scanf("%i", &one);
+
+	for (int i = 2; i <= (one-1); i++) {
+
+		for (int j = 2; j <= (one-1); j++) {
+
+			if ((i^j)%one == 1 && j == (one-1)) {
+
+				printf("%i is a generator of Z_%i\n", i, one);
+			}
+		}
+	}
+}
