@@ -122,9 +122,9 @@ unsigned int isProbablyPrime(unsigned int N) {
 //Finds a generator of Z_p using the assumption that p=2*q+1
 unsigned int findGenerator(unsigned int p) {
   /* Q3.3: complete this function and use the fact that p=2*q+1 to quickly find a generator */
-	int fac = (p - 1) / 2;
+	unsigned int fac = (p - 1) / 2;
 	for (int i = 2; i < (p-1); i++) {
-		if ((int)pow(i,fac)%p != 1 && (int)pow(i,2)%p != 1) {
+		if (modExp(i,fac,p) != 1 && modExp(i,2,p) != 1) {
 			printf("%u is a generator of Z_%u.\n", i, p);
 			break;
 		}
