@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 
 int main(int argc, char **argv) {
 
   //seed random number generator
   // Q2b: get the number of threads to run with from agrv and 
   // add OpenMP API code to set number of threads here
+	int threads = atoi(argv[1]);
+	omp_set_num_threads(threads);
   int Nthreads = 1;
   
   struct drand48_data *drandData; 
@@ -14,6 +17,12 @@ int main(int argc, char **argv) {
 
   // Q2c: add an OpenMP parallel region here, wherein each thread initializes 
   //      one entry in drandData using srand48_r and seed based on thread number
+	#pragma omp parallel
+	{
+		int seed = rand();
+		srand_r(seed, drandData + rand());
+
+	}
   long int seed = 0;
   srand48_r(seed, drandData+0);
 
@@ -23,7 +32,7 @@ int main(int argc, char **argv) {
   //need running tallies
   long long int Ntotal=0;
   long long int Ncircle=0;
-
+#pragma ompr for reduction (+:Ncircle)
   for (long long int n=0; n<Ntrials; n++) {
     double rand1;
     double rand2;
