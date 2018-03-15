@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   
   struct drand48_data *drandData; 
   drandData = (struct drand48_data*) malloc(Nthreads*sizeof(struct drand48_data));
-
+	int time1 = omp_get_wtime();
   // Q2c: add an OpenMP parallel region here, wherein each thread initializes 
   //      one entry in drandData using srand48_r and seed based on thread number
 	#pragma omp parallel
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   //need running tallies
   long long int Ntotal=0;
   long long int Ncircle=0;
-#pragma ompr for reduction (+:Ncircle)
+#pragma omp for reduction (+:Ncircle)
   for (long long int n=0; n<Ntrials; n++) {
     double rand1;
     double rand2;
@@ -60,4 +60,6 @@ int main(int argc, char **argv) {
   free(drandData);
   
   return 0;
+	int time2 = omp_get_wtime();
+	int finalTime = time2 - time1;
 }
