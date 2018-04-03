@@ -2,7 +2,7 @@
 
 To compile:
 
-   gcc -O3 -o mandelbrot mandelbrot.c png_util.c -I. -lpng -lm -fopenmp
+   nvcc -O3 -o mandelbrot mandelbrot.c png_util.c -I. -lpng -lm -fopenmp
 
 Or just type:
 
@@ -20,9 +20,8 @@ To create an image with 4096 x 4096 pixels (last argument will be used to set nu
 #include <stdlib.h>
 #include "png_util.h"
 
-// Q2a: add include for OpenMP header file here:
-#include <omp.h>
-
+// Q2a: add include for CUDA header file heRE
+#include <cuda.h>
 #define MXITER 1000
 
 typedef struct {
@@ -33,7 +32,7 @@ typedef struct {
 }complex_t;
 
 // return iterations before z leaves mandelbrot set for given c
-int testpoint(complex_t c){
+__device__ int testpoint(complex_t c){
   
   int iter;
 
@@ -61,7 +60,9 @@ int testpoint(complex_t c){
 
 // perform Mandelbrot iteration on a grid of numbers in the complex plane
 // record the  iteration counts in the count array
-void  mandelbrot(int Nre, int Nim, complex_t cmin, complex_t cmax, float *count){ 
+
+// Q2c: transform this function into a CUDA kernel
+__global__ void  mandelbrot(int Nre, int Nim, complex_t cmin, complex_t cmax, float *count){ 
   int n,m;
 
   complex_t c;
@@ -69,18 +70,11 @@ void  mandelbrot(int Nre, int Nim, complex_t cmin, complex_t cmax, float *count)
   double dr = (cmax.r-cmin.r)/(Nre-1);
   double di = (cmax.i-cmin.i)/(Nim-1);;
 
-  // Q2c: add a compiler directive to split the outer for loop amongst threads here
-	#pragma omp parallel for private(m, c)
-  for(n=0;n<Nim;++n){
-    for(m=0;m<Nre;++m){
-      c.r = cmin.r + dr*m;
-      c.i = cmin.i + di*n;
+   c.r = cmin.r + dr*m;
+   c.i = cmin.i + di*n;
       
-      count[m+n*Nre] = testpoint(c);
+  count[m+n*Nre] = testpoint(c);
       
-    }
-  }
-
 }
 
 int main(int argc, char **argv){
@@ -93,12 +87,23 @@ int main(int argc, char **argv){
   int Nim = atoi(argv[2]);
   int Nthreads = atoi(argv[3]);
 
-  // Q2b: set the number of OpenMP threads to be Nthreads here:
-	//int threads = atoi(argv[argc-1]);
-	omp_set_num_threads(atoi(argv[argc-1]));
+  // Q2b: set the number of threads per block and the number of blocks here:
+	float *h_a;
+	h_a = (float *) malloc(N*sizeof(float));
+	float *d_a
+	cudaMalloc(&d_a,N*sizeof(float));
+	int Bx = Nre*Nim;
+	int By = Nre*Nim;
+	dim3 B(Bx,By,1);
+	int Gx = (Nre*Nthreads - 1)/Bx;
+	int Gy = (Nim*Nthreads -1)/By;
+	dim3 G(Gx,Gy,1);
+	
   // storage for the iteration counts
   float *count = (float*) malloc(Nre*Nim*sizeof(float));
 
+
+	cudaMemcpy(d_a,h_a,N*sizeof(float),cudaMemcpyHostToDevice);
   // Parameters for a bounding box for "c" that generates an interesting image
   const float centRe = -.759856, centIm= .125547;
   const float diam  = 0.151579;
@@ -111,24 +116,24 @@ int main(int argc, char **argv){
   cmin.i = centIm - 0.5*diam;
   cmax.i = centIm + 0.5*diam;
 
-  // Q2d: complete this to read time before calling mandelbrot with OpenMP API wall clock time
-  double start;
-	start = omp_get_wtime();
+  clock_t start = clock(); //start time in CPU cycles
 
   // compute mandelbrot set
-  mandelbrot(Nre, Nim, cmin, cmax, count); 
+  mandelbrot<<<G, B>>>(Nre, Nim, cmin, cmax, count); 
   
-  // Q2d: complete this to read time after calling mandelbrot using OpenMP wall clock time
-  double end;
-	end = omp_get_wtime();
+  clock_t end = clock(); //start time in CPU cycles
   
   // print elapsed time
-  printf("elapsed = %g\n", end-start);
+  printf("elapsed = %f\n", ((double)(end-start))/CLOCKS_PER_SEC);
 
   // output mandelbrot to png format image
   FILE *fp = fopen("mandelbrot.png", "w");
 
+  printf("Printing mandelbrot.png...");
   write_hot_png(fp, Nre, Nim, count, 0, 80);
+  printf("done.\n");
+
+  free(count);
 
   exit(0);
   return 0;
