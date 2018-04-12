@@ -210,9 +210,12 @@ void convertStringToZ(unsigned char *string, unsigned int Nchars,
   /* Q1.3 Complete this function   */
   /* Q2.2 Parallelize this function with OpenMP   */
  
-  unsigned int d1 = (int) (Nints/Nchars);
+  unsigned int d1 = (int) (Nchars/Nints);
  // padString(string, d1);
   printf("%d\n", d1);
+  printf("%d\n", Nints);
+  printf("%d\n", Nchars);
+  padString(string,d1);
   #pragma omp parallel for
   for (int i = 0; i < strlen(string); i++) {
    Z[i] = string[i] - '0';
@@ -226,7 +229,7 @@ void convertZToString(unsigned int  *Z,      unsigned int Nints,
   /* Q1.4 Complete this function   */
   /* Q2.2 Parallelize this function with OpenMP   */
  
-  unsigned int d2 = (int) (Nints/Nchars);
+  unsigned int d2 = (int) (Nchars/Nints);
   padString(string, d2);
 
   #pragma omp parallel for
