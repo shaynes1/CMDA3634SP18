@@ -152,7 +152,7 @@ void ElGamalEncrypt(unsigned int *m, unsigned int *a, unsigned int Nints,
                     unsigned int p, unsigned int g, unsigned int h) {
 
   /* Q2.1 Parallelize this function with OpenMP   */
-  #pragma omp for
+  #pragma omp parallel for
   for (unsigned int i=0; i<Nints;i++) {
     //pick y in Z_p randomly
     unsigned int y;
@@ -175,7 +175,7 @@ void ElGamalDecrypt(unsigned int *m, unsigned int *a, unsigned int Nints,
                     unsigned int p, unsigned int x) {
 
   /* Q2.1 Parallelize this function with OpenMP   */
-  #pragma omp for
+  #pragma omp parallel for
   for (unsigned int i=0; i<Nints;i++) {
     //compute s = a^x
     unsigned int s = modExp(a[i],x,p);
@@ -213,7 +213,7 @@ void convertStringToZ(unsigned char *string, unsigned int Nchars,
   unsigned int d1 = (int) (Nints/Nchars);
  // padString(string, d1);
   printf("%d\n", d1);
-  #pragma omp for
+  #pragma omp parallel for
   for (int i = 0; i < strlen(string); i++) {
    Z[i] = string[i] - '0';
   }
@@ -229,7 +229,7 @@ void convertZToString(unsigned int  *Z,      unsigned int Nints,
   unsigned int d2 = (int) (Nints/Nchars);
   padString(string, d2);
 
-  #pragma omp for
+  #pragma omp parallel for
   for (int i = 0; i < (sizeof(Z)/sizeof(int)); i++) {
     string[i] = Z[i] + '0';
   }
